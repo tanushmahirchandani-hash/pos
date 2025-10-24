@@ -77,8 +77,7 @@ function renderCart() {
         onchange="updateQty(${index}, this.value)">
       </td>
       <td class="border p-1">₹${item.price}</td>
-      <td class="border p-1">₹${itemTotal}</td>
-      <td class="border p-1 text-center">
+      <td class="border p-1">₹${itemTotal.toFixed(2)}</td> <td class="border p-1 text-center">
         <button onclick="removeItem(${index})" class="text-red-500 font-bold">✖</button>
       </td>
     `;
@@ -110,12 +109,13 @@ generateBillBtn.addEventListener("click", () => {
   const mode = paymentMode.value;
   const custName = document.getElementById("custName").value.trim();
   const custPhone = document.getElementById("custPhone").value.trim();
+  const totalAmount = parseFloat(billTotal.textContent); // Get total before clearing cart
 
   if (mode === "udhaar" && (!custName || !custPhone)) {
     return alert("📋 Enter customer details for Udhaar bill.");
   }
 
-  const stock = JSON.parse(localStorage.getItem("xyz_stock")) || [];
+  let stock = JSON.parse(localStorage.getItem("xyz_stock")) || [];
 
   // Update stock
   cart.forEach(item => {
@@ -132,21 +132,24 @@ generateBillBtn.addEventListener("click", () => {
   localStorage.setItem("xyz_stock", JSON.stringify(stock));
 
   // Save bill
+  // FIX: Save to 'xyz_sales' key and flatten customer data for 'check_sales.js'
   const bill = {
-    date: new Date().toLocaleString(),
+    date: new Date().toLocaleDateString(), // Use simpler date for easier filtering
+    time: new Date().toLocaleTimeString(),
     items: cart,
-    total: parseFloat(billTotal.textContent),
+    total: totalAmount,
     payment: mode,
-    customer: mode === "udhaar" ? { name: custName, phone: custPhone } : null,
+    customerName: mode === "udhaar" ? custName : null,
+    customerPhone: mode === "udhaar" ? custPhone : null,
   };
 
-  let bills = JSON.parse(localStorage.getItem("xyz_bills")) || [];
-  bills.push(bill);
-  localStorage.setItem("xyz_bills", JSON.stringify(bills));
+  let sales = JSON.parse(localStorage.getItem("xyz_sales")) || []; // FIX: Use xyz_sales
+  sales.push(bill);
+  localStorage.setItem("xyz_sales", JSON.stringify(sales)); // FIX: Use xyz_sales
 
   // Render bill
-  document.getElementById("billDate").textContent = bill.date;
-  document.getElementById("billPayment").textContent = mode;
+  document.getElementById("billDate").textContent = `${bill.date} ${bill.time}`;
+  document.getElementById("billPayment").textContent = mode.toUpperCase();
   document.getElementById("billItems").innerHTML = bill.items.map(i =>
     `<tr><td class='border p-1'>${i.name}</td><td class='border p-1'>${i.qty}</td><td class='border p-1'>₹${i.price}</td><td class='border p-1'>₹${(i.price * i.qty).toFixed(2)}</td></tr>`
   ).join("");
@@ -160,6 +163,12 @@ generateBillBtn.addEventListener("click", () => {
     udhaarInfo.classList.add("hidden");
   }
 
+  // Clear cart and form fields after successful bill generation
+  cart = [];
+  renderCart();
+  document.getElementById("custName").value = "";
+  document.getElementById("custPhone").value = "";
+  
   billPreview.classList.remove("hidden");
   downloadBillBtn.classList.remove("hidden");
   sendWhatsAppBtn.classList.remove("hidden");
@@ -169,10 +178,13 @@ generateBillBtn.addEventListener("click", () => {
 downloadBillBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
   const opt = {
-    margin: [0.2, 0.2, 0.2, 0.2],
+    margin: [0.1, 0.1, 0.1, 0.1], // FIX: Reduce margins further to prevent cutting
     filename: `XYZ_Bill_${Date.now()}.pdf`,
     image: { type: "jpeg", quality: 0.99 },
-    html2canvas: { scale: 3, useCORS: true },
+    html2canvas: { 
+        scale: 4, // FIX: Increase scale for better quality/fit
+        useCORS: true 
+    },
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
   await html2pdf().set(opt).from(element).save();
@@ -181,7 +193,21 @@ downloadBillBtn.addEventListener("click", async () => {
 // --- SEND WHATSAPP ---
 sendWhatsAppBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
-  const pdfBlob = await html2pdf().from(element).outputPdf("blob");
+  
+  // Use a more aggressive PDF option for WhatsApp
+  const opt = {
+    margin: [0.1, 0.1, 0.1, 0.1], 
+    filename: `bill.pdf`,
+    image: { type: "jpeg", quality: 0.99 },
+    html2canvas: { 
+        scale: 4, 
+        useCORS: true 
+    },
+    jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
+  };
+  
+  // FIX: Use .output('blob') from the html2pdf instance
+  const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
 
   const formData = new FormData();
   formData.append("file", pdfBlob, "bill.pdf");
@@ -191,7 +217,9 @@ sendWhatsAppBtn.addEventListener("click", async () => {
 
   if (data.status !== "ok") return alert("❌ Upload failed");
 
-  const fileUrl = data.data.downloadPage;
+  // Gofile's free tier sometimes returns a downloadPage URL that's not a direct file link, 
+  // but let's use the file URL if available or fallback.
+  const fileUrl = data.data.fileUrl || data.data.downloadPage; 
   const total = billTotal.textContent;
   const msg = `🧾 *XYZ Store Bill*\nTotal: ₹${total}\nDownload Bill: ${fileUrl}`;
   const phone = prompt("📱 Enter customer's WhatsApp number (with country code):");
@@ -199,3 +227,6 @@ sendWhatsAppBtn.addEventListener("click", async () => {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
   }
 });
+
+// Initialize cart display
+renderCart();
