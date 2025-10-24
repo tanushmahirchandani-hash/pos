@@ -7,12 +7,11 @@ let capturedImage = null; // We still capture the image for the preview, but won
 
 async function startRearCamera() {
   try {
-    // 🎥 Define constraints to strongly prefer the rear camera
-    // 'facingMode: { ideal: "environment" }' is the correct and reliable way
-    // to request the back camera on modern mobile browsers.
+    // 🎥 Define constraints to STRONGLY and EXPLICITLY prefer the rear camera
+    // 'exact: "environment"' forces the browser to use the back camera or throw an error.
     const constraints = {
       video: {
-        facingMode: { ideal: "environment" }
+        facingMode: { exact: "environment" } // <-- KEY CHANGE
       }
     };
 
@@ -20,8 +19,16 @@ async function startRearCamera() {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
   } catch (err) {
-    console.error("Camera error:", err);
-    alert("Unable to access the rear camera. Please check permissions or try again.");
+    console.error("Camera error (Exact Rear Failed):", err);
+    // If the exact rear camera fails, try a generic request as a fallback
+    try {
+        const fallbackConstraints = { video: true };
+        const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        video.srcObject = stream;
+    } catch (fallbackErr) {
+        console.error("Camera error (Generic Fallback Failed):", fallbackErr);
+        alert("Unable to access the camera. Please check permissions or try again.");
+    }
   }
 }
 
