@@ -62,17 +62,17 @@
       <button id="sendWhatsApp" class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg hidden">📤 Send on WhatsApp</button>
     </div>
 
-    <div id="billPreview" class="hidden mt-8 border rounded-lg p-4 bg-white shadow-lg"> 
-        <h2 class="text-xl font-bold mb-2">XYZ Store</h2>
-        <p class="text-sm mb-2">Date: <span id="billDate"></span></p>
+    <div id="billPreview" class="hidden mt-8 border rounded-lg p-4 bg-white shadow-lg w-full text-sm"> 
+        <h2 class="text-2xl font-bold mb-2 text-center">XYZ Store</h2>
+        <p class="text-sm mb-2 text-center">Date: <span id="billDate"></span></p>
 
-        <div id="udhaarInfo" class="mb-2 p-1 bg-red-100 rounded hidden">
+        <div id="udhaarInfo" class="mb-2 p-2 bg-red-100 rounded hidden text-center">
             <p class="font-semibold text-red-700">📋 UDHAAR BILL</p>
             <p class="text-sm">Customer: <span id="billCustomerName"></span></p>
             <p class="text-sm">Phone: <span id="billCustomerPhone"></span></p>
         </div>
         
-        <table class="w-full text-sm border mb-2">
+        <table class="w-full text-sm border mb-3">
             <thead class="bg-gray-100">
             <tr>
                 <th class="border p-1">Item</th>
@@ -84,7 +84,7 @@
             <tbody id="billItems"></tbody>
         </table>
         <p class="text-lg font-semibold text-right">Total: ₹<span id="billTotalFinal"></span></p>
-        <p class="text-sm mt-2">Payment: <span id="billPayment"></span></p>
+        <p class="text-sm mt-2 text-right">Payment: <span id="billPayment"></span></p>
     </div>
 
   </div>
