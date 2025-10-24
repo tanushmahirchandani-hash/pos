@@ -7,27 +7,45 @@ let capturedImage = null; // We still capture the image for the preview, but won
 
 async function startRearCamera() {
   try {
-    // 🎥 Define constraints to STRONGLY and EXPLICITLY prefer the rear camera
-    // 'exact: "environment"' forces the browser to use the back camera or throw an error.
-    const constraints = {
-      video: {
-        facingMode: { exact: "environment" } // <-- KEY CHANGE
-      }
-    };
+    // 🔍 Step 1: List all available devices to find the rear camera's Device ID.
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === "videoinput");
 
-    // 🚀 Start stream
+    // 🎯 Step 2: Try to find the back camera by label.
+    // This is unreliable, but if it works, it's the most precise method.
+    const backCamera = videoDevices.find(device =>
+      device.label.toLowerCase().includes("back") ||
+      device.label.toLowerCase().includes("rear") ||
+      device.label.toLowerCase().includes("environment")
+    );
+
+    let constraints;
+
+    if (backCamera) {
+        // Option 1: Request by precise deviceId (most accurate if label is available)
+        constraints = {
+            video: { deviceId: { exact: backCamera.deviceId } }
+        };
+    } else {
+        // Option 2: Fallback to the 'exact: "environment"' facing mode (the most forceful standard request)
+        constraints = {
+            video: { facingMode: { exact: "environment" } }
+        };
+    }
+
+    // 🚀 Step 3: Start stream with the determined constraints
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
   } catch (err) {
     console.error("Camera error (Exact Rear Failed):", err);
-    // If the exact rear camera fails, try a generic request as a fallback
+    // Final Fallback: If 'exact: "environment"' fails, try a simple generic request.
     try {
         const fallbackConstraints = { video: true };
         const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
         video.srcObject = stream;
     } catch (fallbackErr) {
         console.error("Camera error (Generic Fallback Failed):", fallbackErr);
-        alert("Unable to access the camera. Please check permissions or try again.");
+        alert("Unable to access the rear camera. Please check permissions or try again.");
     }
   }
 }
