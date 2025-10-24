@@ -25,7 +25,7 @@ searchItem.addEventListener("input", () => {
   const stock = JSON.parse(localStorage.getItem("xyz_stock")) || [];
   const query = searchItem.value.trim().toLowerCase();
   searchResults.innerHTML = "";
-  if (!query) return (searchResults.classList.add("hidden"));
+  if (!query) return searchResults.classList.add("hidden");
 
   const filtered = stock.filter(item => item.name.toLowerCase().includes(query));
   if (filtered.length) {
@@ -104,7 +104,7 @@ window.removeItem = function (index) {
 };
 
 // --- GENERATE BILL ---
-generateBillBtn.addEventListener("click", async () => {
+generateBillBtn.addEventListener("click", () => {
   if (cart.length === 0) return alert("🛒 Add at least one item!");
 
   const mode = paymentMode.value;
@@ -131,7 +131,7 @@ generateBillBtn.addEventListener("click", async () => {
 
   localStorage.setItem("xyz_stock", JSON.stringify(stock));
 
-  // Prepare bill data
+  // Save bill
   const bill = {
     date: new Date().toLocaleString(),
     items: cart,
@@ -144,11 +144,11 @@ generateBillBtn.addEventListener("click", async () => {
   bills.push(bill);
   localStorage.setItem("xyz_bills", JSON.stringify(bills));
 
-  // Render preview
+  // Render bill
   document.getElementById("billDate").textContent = bill.date;
   document.getElementById("billPayment").textContent = mode;
-  document.getElementById("billItems").innerHTML = cart.map(i =>
-    `<tr><td class='border p-1'>${i.name}</td><td class='border p-1'>${i.qty}</td><td class='border p-1'>₹${i.price}</td><td class='border p-1'>₹${(i.price*i.qty).toFixed(2)}</td></tr>`
+  document.getElementById("billItems").innerHTML = bill.items.map(i =>
+    `<tr><td class='border p-1'>${i.name}</td><td class='border p-1'>${i.qty}</td><td class='border p-1'>₹${i.price}</td><td class='border p-1'>₹${(i.price * i.qty).toFixed(2)}</td></tr>`
   ).join("");
   document.getElementById("billTotalFinal").textContent = bill.total.toFixed(2);
 
@@ -169,32 +169,27 @@ generateBillBtn.addEventListener("click", async () => {
 downloadBillBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
   const opt = {
-    margin: 0.5,
+    margin: [0.2, 0.2, 0.2, 0.2],
     filename: `XYZ_Bill_${Date.now()}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2 },
+    image: { type: "jpeg", quality: 0.99 },
+    html2canvas: { scale: 3, useCORS: true },
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
-  await html2pdf().from(element).set(opt).save();
+  await html2pdf().set(opt).from(element).save();
 });
 
 // --- SEND WHATSAPP ---
 sendWhatsAppBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
-
-  // Convert to blob for GoFile upload
   const pdfBlob = await html2pdf().from(element).outputPdf("blob");
 
   const formData = new FormData();
   formData.append("file", pdfBlob, "bill.pdf");
 
-  const res = await fetch("https://api.gofile.io/uploadFile", {
-    method: "POST",
-    body: formData,
-  });
+  const res = await fetch("https://api.gofile.io/uploadFile", { method: "POST", body: formData });
   const data = await res.json();
 
-  if (!data.status === "ok") return alert("❌ Upload failed");
+  if (data.status !== "ok") return alert("❌ Upload failed");
 
   const fileUrl = data.data.downloadPage;
   const total = billTotal.textContent;
