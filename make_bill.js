@@ -189,18 +189,17 @@ generateBillBtn.addEventListener("click", () => {
 downloadBillBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
   const opt = {
-    // FIX: Reduced margins to prevent cutting
-    margin: [0.1, 0.1, 0.1, 0.1], 
+    // FIX: Set margin to 0 for maximum content space
+    margin: 0, 
     filename: `XYZ_Bill_${Date.now()}.pdf`,
     image: { type: "jpeg", quality: 0.99 },
     html2canvas: { 
-        // FIX: Increased scale for better quality/fit
+        // Increased scale for better quality/fit
         scale: 4, 
         useCORS: true 
     },
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
-  // FIX: Using await on the promise returned by save()
   await html2pdf().set(opt).from(element).save();
 });
 
@@ -209,7 +208,8 @@ sendWhatsAppBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
   
   const opt = {
-    margin: [0.1, 0.1, 0.1, 0.1], 
+    // FIX: Set margin to 0 here as well
+    margin: 0, 
     filename: `bill.pdf`,
     image: { type: "jpeg", quality: 0.99 },
     html2canvas: { 
@@ -219,7 +219,7 @@ sendWhatsAppBtn.addEventListener("click", async () => {
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
   
-  // FIX: Use .output('blob') from the html2pdf instance
+  // Use .output('blob') from the html2pdf instance
   const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
 
   const formData = new FormData();
