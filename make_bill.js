@@ -77,7 +77,8 @@ function renderCart() {
         onchange="updateQty(${index}, this.value)">
       </td>
       <td class="border p-1">₹${item.price}</td>
-      <td class="border p-1">₹${itemTotal.toFixed(2)}</td> <td class="border p-1 text-center">
+      <td class="border p-1">₹${itemTotal.toFixed(2)}</td>
+      <td class="border p-1 text-center">
         <button onclick="removeItem(${index})" class="text-red-500 font-bold">✖</button>
       </td>
     `;
@@ -109,7 +110,7 @@ generateBillBtn.addEventListener("click", () => {
   const mode = paymentMode.value;
   const custName = document.getElementById("custName").value.trim();
   const custPhone = document.getElementById("custPhone").value.trim();
-  const totalAmount = parseFloat(billTotal.textContent); // Get total before clearing cart
+  const totalAmount = parseFloat(billTotal.textContent);
 
   if (mode === "udhaar" && (!custName || !custPhone)) {
     return alert("📋 Enter customer details for Udhaar bill.");
@@ -117,25 +118,35 @@ generateBillBtn.addEventListener("click", () => {
 
   let stock = JSON.parse(localStorage.getItem("xyz_stock")) || [];
 
-  // Update stock
-  cart.forEach(item => {
-    const found = stock.find(s => s.id === item.id);
-    if (found) {
-      if (found.quantity < item.qty) {
-        alert(`❌ Not enough stock for ${item.name}`);
-        throw new Error("Stock error");
-      }
-      found.quantity -= item.qty;
-    }
-  });
+  // Update stock (Error check: if quantity is reduced below 0, an alert is thrown)
+  try {
+      cart.forEach(item => {
+        const found = stock.find(s => s.id === item.id);
+        if (found) {
+          if (found.quantity < item.qty) {
+            alert(`❌ Not enough stock for ${item.name}`);
+            throw new Error("Stock error");
+          }
+          found.quantity -= item.qty;
+        }
+      });
+  } catch (e) {
+      if (e.message === "Stock error") return;
+      throw e;
+  }
 
   localStorage.setItem("xyz_stock", JSON.stringify(stock));
 
-  // Save bill
-  // FIX: Save to 'xyz_sales' key and flatten customer data for 'check_sales.js'
+  // FIX: Use YYYY-MM-DD format for consistent filtering
+  const now = new Date();
+  const dateStr = now.getFullYear() + '-' + 
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                  String(now.getDate()).padStart(2, '0');
+
+  // FIX: Save to 'xyz_sales' key and flatten customer data
   const bill = {
-    date: new Date().toLocaleDateString(), // Use simpler date for easier filtering
-    time: new Date().toLocaleTimeString(),
+    date: dateStr, 
+    time: now.toLocaleTimeString(),
     items: cart,
     total: totalAmount,
     payment: mode,
@@ -143,11 +154,11 @@ generateBillBtn.addEventListener("click", () => {
     customerPhone: mode === "udhaar" ? custPhone : null,
   };
 
-  let sales = JSON.parse(localStorage.getItem("xyz_sales")) || []; // FIX: Use xyz_sales
+  let sales = JSON.parse(localStorage.getItem("xyz_sales")) || [];
   sales.push(bill);
-  localStorage.setItem("xyz_sales", JSON.stringify(sales)); // FIX: Use xyz_sales
+  localStorage.setItem("xyz_sales", JSON.stringify(sales));
 
-  // Render bill
+  // Render bill Preview
   document.getElementById("billDate").textContent = `${bill.date} ${bill.time}`;
   document.getElementById("billPayment").textContent = mode.toUpperCase();
   document.getElementById("billItems").innerHTML = bill.items.map(i =>
@@ -178,15 +189,18 @@ generateBillBtn.addEventListener("click", () => {
 downloadBillBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
   const opt = {
-    margin: [0.1, 0.1, 0.1, 0.1], // FIX: Reduce margins further to prevent cutting
+    // FIX: Reduced margins to prevent cutting
+    margin: [0.1, 0.1, 0.1, 0.1], 
     filename: `XYZ_Bill_${Date.now()}.pdf`,
     image: { type: "jpeg", quality: 0.99 },
     html2canvas: { 
-        scale: 4, // FIX: Increase scale for better quality/fit
+        // FIX: Increased scale for better quality/fit
+        scale: 4, 
         useCORS: true 
     },
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
+  // FIX: Using await on the promise returned by save()
   await html2pdf().set(opt).from(element).save();
 });
 
@@ -194,7 +208,6 @@ downloadBillBtn.addEventListener("click", async () => {
 sendWhatsAppBtn.addEventListener("click", async () => {
   const element = document.getElementById("billPreview");
   
-  // Use a more aggressive PDF option for WhatsApp
   const opt = {
     margin: [0.1, 0.1, 0.1, 0.1], 
     filename: `bill.pdf`,
@@ -212,18 +225,17 @@ sendWhatsAppBtn.addEventListener("click", async () => {
   const formData = new FormData();
   formData.append("file", pdfBlob, "bill.pdf");
 
+  // Using Gofile for temporary link generation
   const res = await fetch("https://api.gofile.io/uploadFile", { method: "POST", body: formData });
   const data = await res.json();
 
   if (data.status !== "ok") return alert("❌ Upload failed");
 
-  // Gofile's free tier sometimes returns a downloadPage URL that's not a direct file link, 
-  // but let's use the file URL if available or fallback.
   const fileUrl = data.data.fileUrl || data.data.downloadPage; 
   const total = billTotal.textContent;
-  const msg = `🧾 *XYZ Store Bill*\nTotal: ₹${total}\nDownload Bill: ${fileUrl}`;
-  const phone = prompt("📱 Enter customer's WhatsApp number (with country code):");
+  const phone = prompt("📱 Enter customer's WhatsApp number (with country code, e.g., 91xxxxxxxxxx):");
   if (phone) {
+    const msg = `🧾 *XYZ Store Bill*\nTotal: ₹${total}\nDownload Bill: ${fileUrl}`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
   }
 });
