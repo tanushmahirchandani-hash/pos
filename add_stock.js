@@ -7,21 +7,14 @@ let capturedImage = null; // We still capture the image for the preview, but won
 
 async function startRearCamera() {
   try {
-    // 🔍 List all available devices
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === "videoinput");
-
-    // 🎯 Try to find the back camera
-    const backCamera = videoDevices.find(device =>
-      device.label.toLowerCase().includes("back") ||
-      device.label.toLowerCase().includes("rear") ||
-      device.label.toLowerCase().includes("environment")
-    );
-
-    // 🎥 Define constraints
-    const constraints = backCamera
-      ? { video: { deviceId: { exact: backCamera.deviceId } } } // explicit rear cam
-      : { video: { facingMode: { ideal: "environment" } } }; // fallback
+    // 🎥 Define constraints to strongly prefer the rear camera
+    // 'facingMode: { ideal: "environment" }' is the correct and reliable way
+    // to request the back camera on modern mobile browsers.
+    const constraints = {
+      video: {
+        facingMode: { ideal: "environment" }
+      }
+    };
 
     // 🚀 Start stream
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
