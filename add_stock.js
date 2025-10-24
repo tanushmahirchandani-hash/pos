@@ -5,9 +5,11 @@ const snapshot = document.getElementById("snapshot");
 const previewImg = document.getElementById("previewImg");
 let capturedImage = null; // We still capture the image for the preview, but won't save it to storage.
 
-// Start camera
+// Start camera (📷 Rear camera by default)
 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-  navigator.mediaDevices.getUserMedia({ video: true })
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: "environment" } }, // 🔄 Request rear camera
+  })
     .then(stream => {
       video.srcObject = stream;
     })
