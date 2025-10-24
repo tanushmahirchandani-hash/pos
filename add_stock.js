@@ -5,17 +5,38 @@ const snapshot = document.getElementById("snapshot");
 const previewImg = document.getElementById("previewImg");
 let capturedImage = null; // We still capture the image for the preview, but won't save it to storage.
 
-// Start camera (📷 Rear camera by default)
+async function startRearCamera() {
+  try {
+    // 🔍 List all available devices
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === "videoinput");
+
+    // 🎯 Try to find the back camera
+    const backCamera = videoDevices.find(device =>
+      device.label.toLowerCase().includes("back") ||
+      device.label.toLowerCase().includes("rear") ||
+      device.label.toLowerCase().includes("environment")
+    );
+
+    // 🎥 Define constraints
+    const constraints = backCamera
+      ? { video: { deviceId: { exact: backCamera.deviceId } } } // explicit rear cam
+      : { video: { facingMode: { ideal: "environment" } } }; // fallback
+
+    // 🚀 Start stream
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+  } catch (err) {
+    console.error("Camera error:", err);
+    alert("Unable to access the rear camera. Please check permissions or try again.");
+  }
+}
+
+// Start the camera
 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: "environment" } }, // 🔄 Request rear camera
-  })
-    .then(stream => {
-      video.srcObject = stream;
-    })
-    .catch(() => {
-      alert("Camera access denied or unavailable.");
-    });
+  startRearCamera();
+} else {
+  alert("Camera not supported in this browser.");
 }
 
 // Capture photo
@@ -60,7 +81,6 @@ stockForm.addEventListener("submit", e => {
 
   // Save to localStorage
   stock.push(item);
-  // This line should now succeed as the data size is much smaller
   localStorage.setItem("xyz_stock", JSON.stringify(stock));
 
   // Notification if below threshold
