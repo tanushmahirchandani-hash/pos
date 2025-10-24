@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Make Bill - XYZ Store</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script defer src="make_bill.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">💰 Make Bill</h1>
+      <a href="index.html" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded-lg">🏠 Home</a>
+    </div>
+
+    <input type="text" id="searchItem" placeholder="🔍 Search item by name" 
+           class="w-full border px-3 py-2 rounded-lg mb-3">
+
+    <ul id="searchResults" class="border rounded-lg mb-4 max-h-40 overflow-y-auto hidden"></ul>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="p-2 border">Item</th>
+            <th class="p-2 border">Qty</th>
+            <th class="p-2 border">Price</th>
+            <th class="p-2 border">Total</th>
+            <th class="p-2 border">Remove</th>
+          </tr>
+        </thead>
+        <tbody id="cartBody"></tbody>
+      </table>
+    </div>
+
+    <div class="mt-4">
+      <h2 class="text-lg font-semibold">Total: ₹<span id="billTotal">0</span></h2>
+
+      <div class="mt-3">
+        <label class="font-semibold block mb-1">Payment Mode</label>
+        <select id="paymentMode" class="w-full border px-3 py-2 rounded-lg">
+          <option value="cash">💵 Cash</option>
+          <option value="online">💳 Online</option>
+          <option value="udhaar">📋 Udhaar</option>
+        </select>
+      </div>
+
+      <div id="udhaarForm" class="mt-3 hidden">
+        <label class="block text-sm mb-1">Customer Name</label>
+        <input type="text" id="custName" class="border w-full px-3 py-2 rounded-lg mb-2" placeholder="Enter name">
+        <label class="block text-sm mb-1">Phone Number</label>
+        <input type="text" id="custPhone" class="border w-full px-3 py-2 rounded-lg" placeholder="Enter phone">
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3 mt-5">
+      <button id="generateBill" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">📄 Generate Bill</button>
+      <button id="downloadBill" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg hidden">⬇️ Download PDF</button>
+      <button id="sendWhatsApp" class="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg hidden">📤 Send on WhatsApp</button>
+    </div>
+
+    <div id="billPreview" class="hidden mt-8 border rounded-lg p-4 bg-white shadow-lg"> 
+        <h2 class="text-xl font-bold mb-2">XYZ Store</h2>
+        <p class="text-sm mb-2">Date: <span id="billDate"></span></p>
+
+        <div id="udhaarInfo" class="mb-2 p-1 bg-red-100 rounded hidden">
+            <p class="font-semibold text-red-700">📋 UDHAAR BILL</p>
+            <p class="text-sm">Customer: <span id="billCustomerName"></span></p>
+            <p class="text-sm">Phone: <span id="billCustomerPhone"></span></p>
+        </div>
+        
+        <table class="w-full text-sm border mb-2">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="border p-1">Item</th>
+                <th class="border p-1">Qty</th>
+                <th class="border p-1">Price</th>
+                <th class="border p-1">Total</th>
+            </tr>
+            </thead>
+            <tbody id="billItems"></tbody>
+        </table>
+        <p class="text-lg font-semibold text-right">Total: ₹<span id="billTotalFinal"></span></p>
+        <p class="text-sm mt-2">Payment: <span id="billPayment"></span></p>
+    </div>
+
+  </div>
+</body>
+</html>

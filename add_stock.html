@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Stock - XYZ Store</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="add_stock.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+
+  <div class="w-full max-w-xl flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">📦 Add New Stock</h1>
+    <a href="index.html" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded-lg">🏠 Home</a>
+  </div>
+
+  <div class="bg-white p-4 rounded-2xl shadow w-full max-w-md mb-4 text-center">
+    <video id="camera" autoplay playsinline class="w-full rounded-xl border border-gray-300"></video>
+    <canvas id="snapshot" class="hidden"></canvas>
+    <button id="captureBtn" class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+      📸 Capture Photo
+    </button>
+    <img id="previewImg" class="mt-3 w-full hidden rounded-xl border border-gray-300" alt="Preview">
+  </div>
+
+  <form id="stockForm" class="bg-white p-6 rounded-2xl shadow w-full max-w-md">
+    <p id="successMsg" class="text-green-500 font-semibold mb-4 hidden">✅ Stock added successfully!</p>
+    
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1">Item Name</label>
+      <input type="text" id="name" required class="w-full border rounded-lg px-3 py-2" placeholder="Enter product name">
+    </div>
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1">Price (₹)</label>
+      <input type="number" id="price" required class="w-full border rounded-lg px-3 py-2" placeholder="Enter price">
+    </div>
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1">Quantity</label>
+      <input type="number" id="quantity" required class="w-full border rounded-lg px-3 py-2" placeholder="Enter quantity">
+    </div>
+    <div class="mb-3">
+      <label class="block text-sm font-semibold mb-1">Threshold (optional)</label>
+      <input type="number" id="threshold" class="w-full border rounded-lg px-3 py-2" placeholder="Low stock warning level">
+    </div>
+
+    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg">
+      ➕ Add Item to Stock
+    </button>
+  </form>
+</body>
+</html>
